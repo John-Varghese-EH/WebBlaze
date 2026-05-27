@@ -31,25 +31,25 @@ export function HallOfFame() {
   const chartData = Array.from(new Map(combinedData.map(item => [item.url, item])).values());
 
   return (
-    <section id="hall-of-fame" className="py-24 px-6 relative border-t border-white/5 bg-[var(--color-brand-bg)]">
+    <section id="hall-of-fame" className="py-24 px-6 relative border-t border-[var(--color-brand-border-strong)] bg-[var(--color-brand-bg)]">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight mb-4">
+          <h2 className="text-4xl md:text-5xl font-black text-[var(--color-brand-text)] tracking-tight mb-4">
             Hall of <span className="text-gradient">Fame & Shame</span>
           </h2>
-          <p className="text-gray-400 font-mono text-sm">Recent global audit results.</p>
+          <p className="text-[var(--color-brand-muted)] font-mono text-sm">Recent global audit results.</p>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-16 lg:gap-8">
           
           {/* TOP */}
           <div className="space-y-6">
-            <div className="flex items-center gap-3 border-b border-white/10 pb-4">
+            <div className="flex items-center gap-3 border-b border-[var(--color-brand-border-strong)] pb-4">
               <div className="p-2 bg-[var(--color-brand-green)]/10 rounded-lg">
                 <Target className="w-5 h-5 text-[var(--color-brand-green)]" />
               </div>
-              <h3 className="text-2xl font-bold text-white">The Elite</h3>
-              <span className="ml-auto flex items-center px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-mono text-gray-400 uppercase tracking-wider">
+              <h3 className="text-2xl font-bold text-[var(--color-brand-text)]">The Elite</h3>
+              <span className="ml-auto flex items-center px-2.5 py-1 rounded-full bg-[var(--color-brand-charcoal)] border border-[var(--color-brand-border-strong)] text-xs font-mono text-[var(--color-brand-muted)] uppercase tracking-wider">
                 Top Performers
               </span>
             </div>
@@ -63,12 +63,12 @@ export function HallOfFame() {
 
           {/* FLOP */}
           <div className="space-y-6">
-            <div className="flex items-center gap-3 border-b border-white/10 pb-4">
+            <div className="flex items-center gap-3 border-b border-[var(--color-brand-border-strong)] pb-4">
               <div className="p-2 bg-[var(--color-brand-red)]/10 rounded-lg">
                 <AlertTriangle className="w-5 h-5 text-[var(--color-brand-red)]" />
               </div>
-              <h3 className="text-2xl font-bold text-white">The Embers</h3>
-              <span className="ml-auto flex items-center px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-mono text-gray-400 uppercase tracking-wider">
+              <h3 className="text-2xl font-bold text-[var(--color-brand-text)]">The Embers</h3>
+              <span className="ml-auto flex items-center px-2.5 py-1 rounded-full bg-[var(--color-brand-charcoal)] border border-[var(--color-brand-border-strong)] text-xs font-mono text-[var(--color-brand-muted)] uppercase tracking-wider">
                 Needs Rescue
               </span>
             </div>

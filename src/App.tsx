@@ -8,6 +8,7 @@ import { Hero } from './components/Hero';
 import { HallOfFame } from './components/HallOfFame';
 import { Footer } from './components/Footer';
 import { AuditHistory } from './components/AuditHistory';
+import { LegalModals } from './components/LegalModals';
 
 export default function App() {
   return (
@@ -19,6 +20,7 @@ export default function App() {
       </main>
       <AuditHistory />
       <Footer />
+      <LegalModals />
     </div>
   );
 }

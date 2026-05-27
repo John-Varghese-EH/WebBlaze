@@ -12,6 +12,9 @@
   --color-brand-green: var(--theme-green);
   --color-brand-text: var(--theme-text);
   --color-brand-muted: var(--theme-muted);
+  --color-brand-border: var(--theme-border);
+  --color-brand-border-strong: var(--theme-border-strong);
+  --color-brand-nav-bg: var(--theme-nav-bg);
 
   --color-white: var(--theme-text);
   --color-black: var(--theme-bg);
@@ -26,17 +29,23 @@
   --theme-green: #39FF14;
   --theme-text: #FFFFFF;
   --theme-muted: #888888;
+  --theme-border: rgba(255, 255, 255, 0.05);
+  --theme-border-strong: rgba(255, 255, 255, 0.15);
+  --theme-nav-bg: rgba(5, 5, 5, 0.7);
 }
 
 html.light {
   color-scheme: light;
-  --theme-bg: #F4F4F5;
+  --theme-bg: #FAFAFA;
   --theme-red: #D73A33;
-  --theme-charcoal: #E5E5E5;
-  --theme-charcoal-light: #FFFFFF;
+  --theme-charcoal: #FFFFFF;
+  --theme-charcoal-light: #F4F4F5;
   --theme-green: #059669;
   --theme-text: #09090B;
   --theme-muted: #71717A;
+  --theme-border: #E4E4E7;
+  --theme-border-strong: #D4D4D8;
+  --theme-nav-bg: rgba(250, 250, 250, 0.8);
 }
 
 body {
@@ -116,6 +125,6 @@ body {
 .glass-nav {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  background-color: rgba(5, 5, 5, 0.7);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background-color: var(--color-brand-nav-bg);
+  border-bottom: 1px solid var(--color-brand-border);
 }
