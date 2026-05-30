@@ -16,7 +16,7 @@ export function ScoreChart({ data }: { data: ChartData[] }) {
         Global Score Distribution
       </h4>
       <div className="flex-1 w-full min-h-0">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
           <BarChart data={sortedData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
             <XAxis 
               dataKey="url" 

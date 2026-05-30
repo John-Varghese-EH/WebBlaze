@@ -1,10 +1,11 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { History, X, ExternalLink, Activity, BarChart2 } from 'lucide-react';
+import { History, X, ExternalLink, Activity, BarChart2, Search } from 'lucide-react';
 import { useAuditHistory, AuditResult } from '../lib/useAuditHistory';
 
 export function AuditHistory() {
   const { history, clearHistory } = useAuditHistory();
   const [isOpen, setIsOpen] = useState(false);
+  const [filterQuery, setFilterQuery] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const groupedHistory = useMemo(() => {
@@ -13,7 +14,8 @@ export function AuditHistory() {
       if (!groups[item.url]) groups[item.url] = [];
       groups[item.url].push(item);
     });
-    return Object.entries(groups).map(([url, audits]) => {
+    
+    let entries = Object.entries(groups).map(([url, audits]) => {
       // audits are already sorted newest first because they were unshifted
       return {
         url,
@@ -21,7 +23,14 @@ export function AuditHistory() {
         trend: [...audits].reverse() // chronological order for trend line
       };
     });
-  }, [history]);
+
+    if (filterQuery.trim() !== '') {
+      const q = filterQuery.toLowerCase();
+      entries = entries.filter(e => e.url.toLowerCase().includes(q));
+    }
+
+    return entries;
+  }, [history, filterQuery]);
 
   useEffect(() => {
     if (isOpen && scrollRef.current) {
@@ -29,6 +38,10 @@ export function AuditHistory() {
         const firstElem = scrollRef.current?.querySelector('[tabindex="0"]') as HTMLElement | null;
         if (firstElem) firstElem.focus();
       }, 100);
+    } else {
+      if (!isOpen) { // Reset filter when closing
+        setTimeout(() => setFilterQuery(''), 300);
+      }
     }
   }, [isOpen]);
 
@@ -57,82 +70,101 @@ export function AuditHistory() {
       {/* Toggler */}
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 z-50 p-4 bg-[var(--color-brand-charcoal-light)] border border-white/10 hover:border-white/30 rounded-full shadow-2xl transition-all group"
+        className="fixed bottom-6 right-6 z-50 p-4 bg-[var(--color-brand-charcoal-light)] border border-[var(--color-brand-border-strong)] hover:border-[var(--color-brand-red)] rounded-full shadow-2xl transition-all group"
       >
         <span className="absolute -top-1 -right-1 flex h-4 w-4">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--color-brand-red)] opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-4 w-4 bg-[var(--color-brand-red)] border-2 border-black"></span>
+          <span className="relative inline-flex rounded-full h-4 w-4 bg-[var(--color-brand-red)] border-2 border-[var(--color-brand-bg)]"></span>
         </span>
-        <History className="w-6 h-6 text-white group-hover:text-[var(--color-brand-red)] transition-colors" />
+        <History className="w-6 h-6 text-[var(--color-brand-text)] group-hover:text-[var(--color-brand-red)] transition-colors" />
       </button>
 
       {/* Panel */}
-      <div className={`fixed inset-y-0 right-0 w-full sm:w-96 bg-[var(--color-brand-bg)] border-l border-white/10 z-50 transform transition-transform duration-300 ease-in-out shadow-2xl flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-[100%]'}`}>
-        <div className="flex items-center justify-between p-6 border-b border-white/10 glass-nav">
-          <h3 className="text-lg font-bold text-white flex items-center gap-2">
+      <div className={`fixed inset-y-0 right-0 w-full sm:w-96 bg-[var(--color-brand-bg)] border-l border-[var(--color-brand-border-strong)] z-50 transform transition-transform duration-300 ease-in-out shadow-2xl flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-[100%]'}`}>
+        <div className="flex items-center justify-between p-6 border-b border-[var(--color-brand-border)] glass-nav">
+          <h3 className="text-lg font-bold text-[var(--color-brand-text)] flex items-center gap-2">
             <Activity className="w-5 h-5 text-[var(--color-brand-red)]" />
             Session History
           </h3>
-          <button onClick={() => setIsOpen(false)} className="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors">
+          <button onClick={() => setIsOpen(false)} className="p-2 text-[var(--color-brand-muted)] hover:text-[var(--color-brand-text)] rounded-lg hover:bg-[var(--color-brand-charcoal)] transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4">
-          {groupedHistory.map((group, i) => {
-            const { url, latest, trend } = group;
-            return (
-            <div 
-              key={url} 
-              tabIndex={0}
-              onKeyDown={(e) => handleKeyDown(e, url)}
-              className="p-4 bg-[var(--color-brand-charcoal-light)] rounded-xl border border-white/5 relative overflow-hidden group focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-red)] focus:border-transparent transition-all"
-            >
-              <div className={`absolute top-0 left-0 w-1 h-full ${latest.score > 80 ? 'bg-[var(--color-brand-green)]' : latest.score > 50 ? 'bg-yellow-500' : 'bg-[var(--color-brand-red)]'}`} />
-              
-              <div className="flex justify-between items-start mb-3 ml-2">
-                <a 
-                  href={url} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-sm font-medium text-white hover:text-[var(--color-brand-red)] transition-colors truncate max-w-[200px] flex items-center gap-1"
-                >
-                  {url.replace('https://', '')}
-                  <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </a>
-                <span className={`font-mono font-bold ${latest.score > 80 ? 'text-[var(--color-brand-green)]' : latest.score > 50 ? 'text-yellow-500' : 'text-[var(--color-brand-red)]'}`}>
-                  {latest.score}
-                </span>
-              </div>
-              
-              <div className="ml-2 flex justify-between items-end gap-2 text-xs font-mono text-gray-500">
-                <div className="space-y-1">
-                  <div>TTFB: {latest.metrics?.ttfb || '--'}ms</div>
-                  <div>Load: {( (latest.metrics?.loadTime || 0) / 1000).toFixed(1)}s</div>
-                </div>
-                
-                {trend.length > 1 && (
-                  <div className="flex items-end gap-[2px] h-8 opacity-70 group-hover:opacity-100 transition-opacity pb-1">
-                     {trend.slice(-15).map((entry, idx) => (
-                        <div 
-                          key={idx} 
-                          title={`Score: ${entry.score}`}
-                          className={`w-1 rounded-sm ${entry.score > 80 ? 'bg-[var(--color-brand-green)]' : entry.score > 50 ? 'bg-yellow-500' : 'bg-[var(--color-brand-red)]'}`}
-                          style={{ height: `${entry.score}%` }}
-                        />
-                     ))}
-                  </div>
-                )}
-              </div>
-            </div>
-            );
-          })}
+        <div className="p-4 border-b border-[var(--color-brand-border)]">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-brand-muted)]" />
+            <input 
+              type="text" 
+              placeholder="Search by domain..." 
+              value={filterQuery}
+              onChange={(e) => setFilterQuery(e.target.value)}
+              className="w-full bg-[var(--color-brand-charcoal)] border border-[var(--color-brand-border-strong)] text-[var(--color-brand-text)] rounded-lg pl-9 pr-4 py-2 focus:outline-none focus:border-[var(--color-brand-red)] font-mono text-sm"
+            />
+          </div>
         </div>
 
-        <div className="p-6 border-t border-white/10 bg-[var(--color-brand-charcoal)]">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4">
+          {groupedHistory.length === 0 ? (
+            <div className="text-center text-[var(--color-brand-muted)] font-mono text-sm pt-8">
+              No audits found matching '{filterQuery}'
+            </div>
+          ) : (
+            groupedHistory.map((group, i) => {
+              const { url, latest, trend } = group;
+              return (
+              <div 
+                key={url} 
+                tabIndex={0}
+                onKeyDown={(e) => handleKeyDown(e, url)}
+                className="p-4 bg-[var(--color-brand-charcoal-light)] rounded-xl border border-[var(--color-brand-border-strong)] relative overflow-hidden group focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-red)] focus:border-transparent transition-all"
+              >
+                <div className={`absolute top-0 left-0 w-1 h-full ${latest.score > 80 ? 'bg-[var(--color-brand-green)]' : latest.score > 50 ? 'bg-yellow-500' : 'bg-[var(--color-brand-red)]'}`} />
+                
+                <div className="flex justify-between items-start mb-3 ml-2">
+                  <a 
+                    href={url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-sm font-medium text-[var(--color-brand-text)] hover:text-[var(--color-brand-red)] transition-colors truncate max-w-[200px] flex items-center gap-1"
+                  >
+                    {url.replace('https://', '')}
+                    <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </a>
+                  <span className={`font-mono font-bold ${latest.score > 80 ? 'text-[var(--color-brand-green)]' : latest.score > 50 ? 'text-yellow-500' : 'text-[var(--color-brand-red)]'}`}>
+                    {latest.score}
+                  </span>
+                </div>
+                
+                <div className="ml-2 flex justify-between items-end gap-2 text-xs font-mono text-[var(--color-brand-muted)]">
+                  <div className="space-y-1">
+                    <div>TTFB: {latest.metrics?.ttfb || '--'}ms</div>
+                    <div>Load: {( (latest.metrics?.loadTime || 0) / 1000).toFixed(1)}s</div>
+                  </div>
+                  
+                  {trend.length > 1 && (
+                    <div className="flex items-end gap-[2px] h-8 opacity-70 group-hover:opacity-100 transition-opacity pb-1">
+                       {trend.slice(-15).map((entry, idx) => (
+                          <div 
+                            key={idx} 
+                            title={`Score: ${entry.score}`}
+                            className={`w-1 rounded-sm ${entry.score > 80 ? 'bg-[var(--color-brand-green)]' : entry.score > 50 ? 'bg-yellow-500' : 'bg-[var(--color-brand-red)]'}`}
+                            style={{ height: `${entry.score}%` }}
+                          />
+                       ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+              );
+            })
+          )}
+        </div>
+
+        <div className="p-6 border-t border-[var(--color-brand-border)] bg-[var(--color-brand-charcoal)]">
           <button 
             onClick={clearHistory}
-            className="w-full py-3 text-sm font-medium text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-colors border border-white/5"
+            className="w-full py-3 text-sm font-medium text-[var(--color-brand-muted)] hover:text-[var(--color-brand-text)] bg-[var(--color-brand-charcoal-light)] hover:bg-[var(--color-brand-bg)] rounded-lg transition-colors border border-[var(--color-brand-border-strong)]"
           >
             Clear History
           </button>

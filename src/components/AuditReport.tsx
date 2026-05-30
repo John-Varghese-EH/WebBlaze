@@ -338,6 +338,21 @@ export function AuditReport({ result, isLoading }: { result: AuditResult | null,
           </div>
         </div>
 
+        {/* Accessibility & UX */}
+        <div className="bg-[var(--color-brand-charcoal-light)] rounded-2xl border border-[var(--color-brand-border-strong)] p-8">
+          <div className="flex justify-between items-center mb-6">
+            <h4 className="text-xl font-bold text-[var(--color-brand-text)]">Accessibility & UX</h4>
+            <span className={`text-2xl font-black ${m.accessibilityScore! >= 80 ? 'text-[var(--color-brand-green)]' : m.accessibilityScore! >= 50 ? 'text-yellow-500' : 'text-[var(--color-brand-red)]'}`}>{m.accessibilityScore || 0}%</span>
+          </div>
+          <p className="text-[var(--color-brand-muted)] text-sm mb-6">Inclusivity and semantic interaction design.</p>
+          <div className="space-y-4">
+            <DetailItem label="Semantic Landmarks" result={[m.hasMainTag && '<main>', m.hasNavTag && '<nav>', m.hasHeaderTag && '<header>'].filter(Boolean).join(', ') || 'No landmarks detected'} pass={!!m.hasMainTag} />
+            <ActionableDetailItem label="Image Alt Tags" fail={m.imgTotal! > 0 && ((m.imgWithAlt || 0) / (m.imgTotal || 1)) < 0.8} pass={m.imgTotal === 0 || ((m.imgWithAlt || 0) / (m.imgTotal || 1)) >= 0.8} impact="Screen reader & AI vision context" action={`${m.imgWithAlt || 0}/${m.imgTotal || 0} images have alt text`} />
+            <DetailItem label="Interactive Inputs" result={`${m.formCount || 0} Forms, ${m.inputCount || 0} Inputs, ${m.buttonCount || 0} Buttons`} pass={true} />
+            <DetailItem label="ARIA Labels" result={`${m.ariaLabelCount || 0} ARIA definitions`} pass={(m.ariaLabelCount || 0) > 0} />
+          </div>
+        </div>
+
       </div>
 
       {/* Extended AI Reports */}

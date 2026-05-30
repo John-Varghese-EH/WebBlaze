@@ -110,11 +110,6 @@ export function Hero() {
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] md:w-[600px] md:h-[600px] bg-[var(--color-brand-red)] opacity-[0.03] blur-[100px] rounded-full pointer-events-none" />
 
       <div className="max-w-5xl mx-auto space-y-6 md:space-y-8 relative z-10 w-full flex flex-col items-center mt-8 md:mt-16">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--color-brand-charcoal)] border border-[var(--color-brand-red)]/30 text-xs md:text-sm font-mono text-[var(--color-brand-red)] mb-2 shadow-[0_0_15px_rgba(248,81,73,0.2)]">
-          <Terminal className="w-4 h-4 animate-pulse" />
-          <span>Lighthouse Alternative - No BS Analytics</span>
-        </div>
-
         <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-black tracking-tighter text-[var(--color-brand-text)] leading-[0.95] text-center w-full uppercase">
           Ready to be <br className="hidden md:block" />
           <span className="text-gradient">Roasted?</span>
@@ -140,7 +135,7 @@ export function Hero() {
             <button
               type="submit"
               disabled={isLoading}
-              className={`relative overflow-hidden group min-w-[200px] px-6 py-4 md:px-8 bg-[var(--color-brand-red)] hover:bg-[#ff6b6b] text-[var(--color-brand-text)] font-black uppercase text-lg tracking-wider rounded-xl transition-all disabled:opacity-80 flex items-center justify-center gap-2 ${isLoading ? 'btn-fire-loading text-shadow-sm scale-[0.98]' : 'hover:scale-[1.02]'}`}
+              className={`relative overflow-hidden group min-w-[200px] px-6 py-4 md:px-8 bg-[var(--color-brand-red)] hover:bg-[#eb4b4b] text-white font-black uppercase text-lg tracking-wider rounded-xl transition-all disabled:opacity-80 flex items-center justify-center gap-2 ${isLoading ? 'btn-fire-loading text-shadow-sm scale-[0.98]' : 'hover:scale-[1.02]'}`}
             >
               <span className="relative z-10 flex items-center gap-2 font-mono drop-shadow-md">
                 {isLoading ? 'Igniting...' : 'Run Audit'}

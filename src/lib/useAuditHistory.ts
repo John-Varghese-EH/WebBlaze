@@ -30,6 +30,15 @@ export interface AuditMetrics {
   trustAuthority?: number;
   businessActivation?: number;
   brandImprint?: number;
+  accessibilityScore?: number;
+  hasMainTag?: boolean;
+  hasHeaderTag?: boolean;
+  hasFooterTag?: boolean;
+  hasNavTag?: boolean;
+  formCount?: number;
+  inputCount?: number;
+  buttonCount?: number;
+  ariaLabelCount?: number;
 }
 
 export interface AuditResult {
