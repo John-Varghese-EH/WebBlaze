@@ -1,0 +1,4 @@
+Contact: mailto:security@webblaze.com
+Preferred-Languages: en
+Canonical: https://webblaze.com/.well-known/security.txt
+Hiring: https://webblaze.com/careers

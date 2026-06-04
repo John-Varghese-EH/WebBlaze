@@ -1,0 +1,27 @@
+# WebBlaze
+
+> WebBlaze is a technical SEO and architecture auditing tool designed for modern websites.
+
+## About
+
+WebBlaze acts as an agnostic crawler. It identifies friction points that degrade the extraction of your data by engines (Googlebot) and conversational agents (GPTBot, Claude).
+
+- **Type:** SaaS / Dev Tool
+- **Primary Language:** English
+- **Target Audience:** Developers, SEOs, Product Managers
+
+## Key Topics & Expertise
+
+- **Technical SEO:** TTFB, HTTP requests, indexing directives, canonical tags and server robustness.
+- **GEO (Generative Engine Optimization):** Structured data, business entities, llms.txt integration.
+- **Business Activation:** Accessibility of CTAs, route friction and presence of data for autonomous agents.
+
+## Important Pages
+
+- [Home](https://webblaze.com/): Scan a site and get telemetry.
+- [Checklist](https://webblaze.com/checklist): Production deployment matrix.
+
+## AI & LLM Policy
+
+- **Training Permitted:** Conditional
+- **Citation Permitted:** Yes — attribute as "WebBlaze (webblaze.com)"

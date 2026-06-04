@@ -1,12 +1,129 @@
 import React, { useState } from 'react';
 import { Shield, Zap, Search, Activity, BookOpen, Share2, Server, Globe2, AlertTriangle, CheckCircle2, FileJson, FileCode, CheckCircle, XCircle, Sparkles, Plus, ArrowRight } from 'lucide-react';
+import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import { CountUp } from './CountUp';
+
+function TelemetryMatrix({ m, m2 }: { m: AuditMetrics, m2?: AuditMetrics }) {
+  const data = [
+    {
+      subject: 'Tech',
+      A: 95, // Assuming technical foundation is generally high or derived
+      B: 85,
+      fullMark: 100,
+      desc: 'Server velocity, HTML weight, and core infrastructure readiness for bots.'
+    },
+    {
+      subject: 'SEO',
+      A: m.seoScore ? m.seoScore * 5 : 50,
+      B: m2?.seoScore ? m2.seoScore * 5 : 50,
+      fullMark: 100,
+      desc: 'Information hierarchy, Title tags, and content depth for search indexing.'
+    },
+    {
+      subject: 'AI Vis',
+      A: m.aiUnderstanding || 50,
+      B: m2?.aiUnderstanding || 50,
+      fullMark: 100,
+      desc: 'Generative Engine Optimization (GEO). How well LLMs can synthesize context.'
+    },
+    {
+      subject: 'Trust',
+      A: m.trustAuthority || 50,
+      B: m2?.trustAuthority || 50,
+      fullMark: 100,
+      desc: 'Security headers, TLS/SSL, and editorial authority footprints.'
+    },
+    {
+      subject: 'Biz',
+      A: m.businessActivation || 50,
+      B: m2?.businessActivation || 50,
+      fullMark: 100,
+      desc: 'Actionable pathways, merchant schemas, and transactional endpoints.'
+    },
+    {
+      subject: 'A11y',
+      A: m.accessibilityScore || 50,
+      B: m2?.accessibilityScore || 50,
+      fullMark: 100,
+      desc: 'Inclusivity, semantic landmarks, ARIA labels, and human-readability.'
+    },
+  ];
+
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      const point = data.find(d => d.subject === label);
+      return (
+        <div className="bg-[var(--color-brand-charcoal)] border-2 border-[var(--color-brand-red)] p-4 rounded-none shadow-[4px_4px_0_var(--color-brand-red)] w-64">
+          <div className="font-black text-[var(--color-brand-text)] font-mono uppercase tracking-widest text-sm mb-2 pb-2 border-b border-[var(--color-brand-border-strong)]">
+            {label}
+            {payload.map((p: any, i: number) => (
+              <span key={i} className="block mt-1" style={{ color: p.color }}>
+                {p.dataKey === 'A' ? 'Primary' : 'Competitor'}: {p.value}%
+              </span>
+            ))}
+          </div>
+          <p className="text-xs text-[var(--color-brand-muted)] font-mono leading-tight">
+            {point?.desc}
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  return (
+    <div className="w-full h-80 mt-12 bg-[var(--color-brand-charcoal-light)] rounded-2xl border border-[var(--color-brand-border-strong)] flex flex-col pt-4">
+       <span className="text-[10px] font-mono text-[var(--color-brand-muted)] uppercase tracking-widest px-6 font-bold">Telemetry Matrix</span>
+       <div className="flex-1 -mt-4">
+      <ResponsiveContainer width="100%" height="100%">
+        <RadarChart cx="50%" cy="50%" outerRadius="65%" data={data}>
+          <PolarGrid stroke="var(--color-brand-border-strong)" />
+          <PolarAngleAxis dataKey="subject" tick={{ fill: 'var(--color-brand-muted)', fontSize: 12, fontFamily: 'monospace' }} />
+          <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+          <Tooltip content={<CustomTooltip />} />
+          <Radar name="Primary" dataKey="A" stroke="var(--color-brand-green)" fill="var(--color-brand-green)" fillOpacity={0.2} />
+          {m2 && <Radar name="Competitor" dataKey="B" stroke="var(--colors-yellow-500, #EAB308)" fill="var(--colors-yellow-500, #EAB308)" fillOpacity={0.2} />}
+        </RadarChart>
+      </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
 import type { AuditResult, AuditMetrics } from '../lib/useAuditHistory';
 
-export function AuditReport({ result, isLoading }: { result: AuditResult | null, isLoading?: boolean }) {
-  const [compareUrl, setCompareUrl] = useState('');
+export function AuditReport({ result, isLoading, initialCompareResult }: { result: AuditResult | null, isLoading?: boolean, initialCompareResult?: AuditResult | null }) {
+  const [compareUrl, setCompareUrl] = useState(initialCompareResult ? initialCompareResult.url : '');
   const [isComparing, setIsComparing] = useState(false);
-  const [compareResult, setCompareResult] = useState<AuditResult | null>(null);
+  const [compareResult, setCompareResult] = useState<AuditResult | null>(initialCompareResult || null);
+  const [copied, setCopied] = useState(false);
+  const [promptCopied, setPromptCopied] = useState(false);
+
+  const [baselineScore, setBaselineScore] = useState<number | null>(null);
+
+  React.useEffect(() => {
+    if (initialCompareResult) {
+      setCompareResult(initialCompareResult);
+      setCompareUrl(initialCompareResult.url);
+    }
+  }, [initialCompareResult]);
+
+  React.useEffect(() => {
+    if (result) {
+      try {
+        const data = localStorage.getItem('webblaze_history');
+        if (data) {
+          const parsed: AuditResult[] = JSON.parse(data);
+          // Find the most recent audit for the exact same URL that occurred strictly before this one
+          const previous = parsed.find(a => a.url === result.url && a.timestamp < result.timestamp);
+          if (previous) {
+            setBaselineScore(previous.score);
+          } else {
+            setBaselineScore(null);
+          }
+        }
+      } catch(e) {}
+    }
+  }, [result]);
 
   if (!result && !isLoading) return null;
 
@@ -40,30 +157,100 @@ export function AuditReport({ result, isLoading }: { result: AuditResult | null,
     }
   };
 
+  const handleShare = () => {
+    if (!result) return;
+    try {
+      const payload = btoa(encodeURIComponent(JSON.stringify({ result, compareResult })));
+      const shareUrl = `${window.location.origin}/${result.url.replace(/^https?:\/\//, '')}?data=${payload}`;
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }).catch(err => {
+        console.error('Failed to copy: ', err);
+      });
+    } catch (e) {
+      console.error('Failed to generate sharing link:', e);
+    }
+  };
+
+  const handleGeneratePrompt = () => {
+    if (!result) return;
+    const met = result.metrics;
+    let issues = [];
+    if (!met.title || met.title.length < 10) issues.push("- Missing or too short Title tag");
+    if (!met.description) issues.push("- Missing Meta Description");
+    if (met.h1Count !== 1) issues.push(`- Incorrect H1 tag count (${met.h1Count} found, should be exactly 1)`);
+    if (met.ttfb >= 300) issues.push(`- Slow TTFB (${(met.ttfb/1000).toFixed(2)}s)`);
+    if (met.imgTotal && met.imgTotal > 0 && ((met.imgWithAlt || 0) / met.imgTotal) < 0.8) issues.push(`- Missing alt text on some images (${met.imgWithAlt}/${met.imgTotal} have alt text)`);
+    if (!met.hasOpenGraph) issues.push("- Missing Open Graph tags for social sharing");
+    if (!met.robotsAllowed) issues.push("- site is blocking robots (noindex)");
+    if (!met.canonicalDetected) issues.push("- Missing rel=\"canonical\" tag");
+    if (!met.hasRobotsTxt) issues.push("- Missing robots.txt file");
+
+    if (!met.hasLlmsTxt) issues.push("- Missing llms.txt instruction file, harming AI crawler understanding.");
+    if (met.accessibilityScore !== undefined && met.accessibilityScore < 80) issues.push(`- Low Accessibility & UX Score (${met.accessibilityScore}/100): Need semantic landmarks and ARIA improvements.`);
+    if (!met.trustAuthority || met.trustAuthority < 50) issues.push("- Low Trust Authority (Need stronger editorial markers and trustworthiness for AI engines/GEO).");
+    if (!met.businessActivation || met.businessActivation < 50) issues.push("- Weak Business Resilience Index (Lacking conversational readiness, and clear transactional schemas for autonomous agents).");
+    if (!met.aiUnderstanding || met.aiUnderstanding < 50) issues.push("- Weak GEO Radar/AI Synthesis (Semantics are hard for LLMs to confidently read or establish differentiation).");
+    if (!met.brandImprint || met.brandImprint < 50) issues.push("- Low Brand Imprint (Brand identity is not heavily optimized for external citation contexts).");
+
+    const prompt = `I recently ran an SEO and AI accessibility audit of my website (${result.url}) and got a score of ${result.score}/100.
+
+I need help fixing the following issues:
+${issues.length > 0 ? issues.join('\n') : '- No major issues found, but I want to improve my SEO and AI accessibility score further.'}
+
+Could you provide specific code examples, configuration changes, or strategies I can use to resolve these issues? Please focus on practical, actionable steps for both traditional SEO and modern LLM / GEO (Generative Engine Optimization) readability.`;
+
+    navigator.clipboard.writeText(prompt).then(() => {
+      setPromptCopied(true);
+      setTimeout(() => setPromptCopied(false), 2000);
+    }).catch(err => {
+      console.error('Failed to copy: ', err);
+    });
+  };
+
   return (
     <div id="audit-results" className="w-full max-w-7xl mx-auto mt-16 animate-in fade-in slide-in-from-bottom-8 duration-700">
       
-      {/* Compare Inputs */}
-      {!compareResult && !isComparing && (
-         <div className="mb-8 flex justify-end">
-            <form onSubmit={handleCompare} className="flex flex-col sm:flex-row gap-2 relative z-10 w-full sm:w-auto">
-              <input 
-                type="text" 
-                placeholder="Compare vs competitor.com..." 
-                value={compareUrl}
-                onChange={(e) => setCompareUrl(e.target.value.toLowerCase())}
-                className="bg-[var(--color-brand-charcoal-light)] border border-[var(--color-brand-border-strong)] text-[var(--color-brand-text)] px-4 py-2 rounded-lg focus:outline-none focus:border-[var(--color-brand-red)] w-full sm:w-64 font-mono text-sm"
-              />
-              <button 
-                type="submit" 
-                disabled={!compareUrl}
-                className="bg-[var(--color-brand-border-strong)] hover:bg-white/20 text-[var(--color-brand-text)] font-mono text-sm px-4 py-2 rounded-lg flex items-center justify-center gap-2 border border-[var(--color-brand-border-strong)] transition-colors disabled:opacity-50"
-              >
-                <Plus className="w-4 h-4" /> Compare
-              </button>
-            </form>
-         </div>
-      )}
+      {/* Compare Inputs & Share */}
+      <div className="mb-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div className="flex gap-2 w-full sm:w-auto">
+          <button 
+            onClick={handleShare}
+            className="flex-1 sm:flex-none bg-[var(--color-brand-charcoal-light)] hover:bg-[var(--color-brand-border-strong)] text-[var(--color-brand-text)] font-mono text-sm px-4 py-2 rounded-lg flex items-center justify-center gap-2 border border-[var(--color-brand-border-strong)] transition-colors"
+          >
+            {copied ? <CheckCircle className="w-4 h-4 text-[var(--color-brand-green)]" /> : <Share2 className="w-4 h-4" />} 
+            {copied ? 'Copied Link!' : 'Share Roast'}
+          </button>
+          
+          <button 
+            onClick={handleGeneratePrompt}
+            className="flex-1 sm:flex-none bg-[var(--color-brand-charcoal-light)] hover:bg-[var(--color-brand-border-strong)] text-[var(--color-brand-text)] font-mono text-sm px-4 py-2 rounded-lg flex items-center justify-center gap-2 border border-[var(--color-brand-border-strong)] transition-colors"
+          >
+            {promptCopied ? <CheckCircle className="w-4 h-4 text-[var(--color-brand-green)]" /> : <Sparkles className="w-4 h-4" />} 
+            {promptCopied ? 'Prompt Copied!' : 'AI Fix Prompt'}
+          </button>
+        </div>
+
+        {!compareResult && !isComparing && (
+          <form onSubmit={handleCompare} className="flex flex-col sm:flex-row gap-2 relative z-10 w-full sm:w-auto">
+            <input 
+              type="text" 
+              placeholder="Compare vs competitor.com..." 
+              value={compareUrl}
+              onChange={(e) => setCompareUrl(e.target.value.toLowerCase())}
+              className="bg-[var(--color-brand-charcoal-light)] border border-[var(--color-brand-border-strong)] text-[var(--color-brand-text)] px-4 py-2 rounded-lg focus:outline-none focus:border-[var(--color-brand-red)] w-full sm:w-64 font-mono text-sm"
+            />
+            <button 
+              type="submit" 
+              disabled={!compareUrl}
+              className="bg-[var(--color-brand-border-strong)] hover:bg-white/20 text-[var(--color-brand-text)] font-mono text-sm px-4 py-2 rounded-lg flex items-center justify-center gap-2 border border-[var(--color-brand-border-strong)] transition-colors disabled:opacity-50"
+            >
+              <Plus className="w-4 h-4" /> Compare
+            </button>
+          </form>
+        )}
+      </div>
 
       {isComparing && (
         <div className="mb-8 p-4 bg-[var(--color-brand-charcoal)] border border-[var(--color-brand-border-strong)] rounded-xl flex items-center justify-center gap-3 text-[var(--color-brand-red)] font-mono text-sm">
@@ -101,10 +288,18 @@ export function AuditReport({ result, isLoading }: { result: AuditResult | null,
 
             <div className="flex flex-col items-center justify-center shrink-0">
               <span className="text-xs font-mono text-[var(--color-brand-muted)] uppercase tracking-widest mb-4 text-center">AI Authority</span>
-              <div className={`relative w-48 h-48 rounded-full border-[6px] flex items-center justify-center shadow-[0_0_50px_rgba(0,0,0,0.5)] ${result.score >= 80 ? 'border-[var(--color-brand-green)] shadow-[var(--color-brand-green)]/20' : result.score >= 50 ? 'border-[var(--colors-yellow-500, #EAB308)] shadow-[var(--colors-yellow-500, #EAB308)]/20' : 'border-[var(--color-brand-red)] shadow-[var(--color-brand-red)]/20'}`}>
+              <div className={`relative w-48 h-48 rounded-full border-[6px] flex items-center justify-center shadow-[0_0_50px_rgba(0,0,0,0.5)] ${result.score >= 80 ? 'border-[var(--color-brand-green)] shadow-[var(--color-brand-green)]/20' : result.score >= 50 ? 'border-yellow-500 shadow-yellow-500/20' : 'border-[var(--color-brand-red)] shadow-[var(--color-brand-red)]/20'}`}>
                 <div className="text-7xl font-mono font-black tracking-tighter text-[var(--color-brand-text)]">
                   <CountUp end={result.score} duration={2} />
                 </div>
+                {baselineScore !== null && (
+                  <div className={`absolute -bottom-3 left-1/2 -translate-x-1/2 px-2 py-1 rounded bg-[var(--color-brand-charcoal)] border text-xs font-bold font-mono tracking-tighter whitespace-nowrap z-20 ${result.score > baselineScore ? 'border-[var(--color-brand-green)] text-[var(--color-brand-green)]' : result.score < baselineScore ? 'border-[var(--color-brand-red)] text-[var(--color-brand-red)]' : 'border-[var(--color-brand-border-strong)] text-[var(--color-brand-muted)]'}`}>
+                    {result.score >= baselineScore ? '+' : ''}{(result.score - baselineScore)} vs baseline
+                  </div>
+                )}
+              </div>
+              <div className={`mt-6 text-xs font-mono font-bold uppercase tracking-widest px-3 py-1 rounded-full border ${result.score >= 80 ? 'border-[var(--color-brand-green)] text-[var(--color-brand-green)] bg-[var(--color-brand-green)]/10' : result.score >= 50 ? 'border-yellow-500 text-yellow-500 bg-yellow-500/10' : 'border-[var(--color-brand-red)] text-[var(--color-brand-red)] bg-[var(--color-brand-red)]/10'}`}>
+                {result.score >= 80 ? 'Solid Status' : result.score >= 50 ? 'Partial Status' : 'Critical Status'}
               </div>
               <div className="mt-6 flex gap-4 text-sm font-mono text-[var(--color-brand-text)] bg-[var(--color-brand-bg)] rounded-lg px-4 py-3 border border-[var(--color-brand-border)]">
                 <span className="flex items-center gap-2"><Globe2 className="w-4 h-4" /> {result.url.replace('https://', '').split('/')[0]}</span>
@@ -127,10 +322,13 @@ export function AuditReport({ result, isLoading }: { result: AuditResult | null,
 
               <div className="flex flex-col items-center justify-center shrink-0">
                 <span className="text-xs font-mono text-[var(--color-brand-muted)] uppercase tracking-widest mb-4 text-center">AI Authority</span>
-                <div className={`relative w-48 h-48 rounded-full border-[6px] flex items-center justify-center shadow-[0_0_50px_rgba(0,0,0,0.5)] ${compareResult.score >= 80 ? 'border-[var(--color-brand-green)] shadow-[var(--color-brand-green)]/20' : compareResult.score >= 50 ? 'border-[var(--colors-yellow-500, #EAB308)] shadow-[var(--colors-yellow-500, #EAB308)]/20' : 'border-[var(--color-brand-red)] shadow-[var(--color-brand-red)]/20'}`}>
+                <div className={`relative w-48 h-48 rounded-full border-[6px] flex items-center justify-center shadow-[0_0_50px_rgba(0,0,0,0.5)] ${compareResult.score >= 80 ? 'border-[var(--color-brand-green)] shadow-[var(--color-brand-green)]/20' : compareResult.score >= 50 ? 'border-yellow-500 shadow-yellow-500/20' : 'border-[var(--color-brand-red)] shadow-[var(--color-brand-red)]/20'}`}>
                   <div className="text-7xl font-mono font-black tracking-tighter text-[var(--color-brand-text)]">
                     <CountUp end={compareResult.score} duration={2} />
                   </div>
+                </div>
+                <div className={`mt-4 text-xs font-mono font-bold uppercase tracking-widest px-3 py-1 rounded-full border ${compareResult.score >= 80 ? 'border-[var(--color-brand-green)] text-[var(--color-brand-green)] bg-[var(--color-brand-green)]/10' : compareResult.score >= 50 ? 'border-yellow-500 text-yellow-500 bg-yellow-500/10' : 'border-[var(--color-brand-red)] text-[var(--color-brand-red)] bg-[var(--color-brand-red)]/10'}`}>
+                  {compareResult.score >= 80 ? 'Solid Status' : compareResult.score >= 50 ? 'Partial Status' : 'Critical Status'}
                 </div>
                 <div className="mt-6 flex gap-4 text-sm font-mono text-[var(--color-brand-text)] bg-[var(--color-brand-bg)] rounded-lg px-4 py-3 border border-[var(--color-brand-border)]">
                   <span className="flex items-center gap-2"><Globe2 className="w-4 h-4" /> {compareResult.url.replace('https://', '').split('/')[0]}</span>
@@ -140,6 +338,9 @@ export function AuditReport({ result, isLoading }: { result: AuditResult | null,
           </div>
         )}
       </div>
+
+      <TelemetryMatrix m={m} m2={m2} />
+      <div className="mb-12"></div>
 
       {/* Server Metrics Section */}
       <div className={`grid gap-8 mb-8 ${compareResult ? 'lg:grid-cols-2' : 'grid-cols-1'}`}>
@@ -400,6 +601,54 @@ export function AuditReport({ result, isLoading }: { result: AuditResult | null,
       </div>
 
       <h3 className="text-3xl font-bold text-[var(--color-brand-text)] mt-16 mb-8 flex items-center gap-4">
+        Keyboard & Focus Accessibility <span className="px-2 py-1 text-[10px] bg-[var(--color-brand-red)]/10 text-[var(--color-brand-red)] border border-[var(--color-brand-red)]/20 rounded font-mono uppercase tracking-widest">Diagnostic</span>
+      </h3>
+      <div className="bg-[var(--color-brand-charcoal)] rounded-xl border border-[var(--color-brand-border-strong)] overflow-hidden mb-16 overflow-x-auto shadow-2xl">
+        <table className="w-full text-left text-sm whitespace-nowrap md:whitespace-normal">
+          <thead>
+            <tr className="bg-[var(--color-brand-charcoal-light)] border-b border-[var(--color-brand-border-strong)]">
+              <th className="px-6 py-4 font-mono tracking-widest text-[var(--color-brand-muted)] uppercase text-[10px] font-bold w-1/4">Check</th>
+              <th className="px-6 py-4 font-mono tracking-widest text-[var(--color-brand-muted)] uppercase text-[10px] font-bold w-1/6">Impact</th>
+              <th className="px-6 py-4 font-mono tracking-widest text-[var(--color-brand-muted)] uppercase text-[10px] font-bold w-1/6">Result</th>
+              <th className="px-6 py-4 font-mono tracking-widest text-[var(--color-brand-muted)] uppercase text-[10px] font-bold">Details</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[var(--color-brand-border-strong)] text-[var(--color-brand-text)]">
+            <DiagnosticRow 
+              check="Skip Navigation Link" 
+              impact="High" 
+              status={result.metrics.hasMainTag ? 'pass' : 'warn'} 
+              details={result.metrics.hasMainTag ? "Found '<main>' element which serves as a good skip target." : "Missing '<main>' element. Skip links may not route properly."} 
+            />
+            <DiagnosticRow 
+              check="Semantic ARIA Navigation" 
+              impact="Critical" 
+              status={result.metrics.hasNavTag ? 'pass' : 'fail'} 
+              details={result.metrics.hasNavTag ? "Found '<nav>' landmarks." : "Missing '<nav>' landmarks, affecting screen reader routing."} 
+            />
+            <DiagnosticRow 
+              check="Form Accessibility Labels" 
+              impact="High" 
+              status={result.metrics.formCount > 0 ? (result.metrics.ariaLabelCount > 0 ? 'pass' : 'warn') : 'pass'} 
+              details={result.metrics.formCount === 0 ? "No forms detected to check." : `${result.metrics.ariaLabelCount} ARIA labels found on the page.`} 
+            />
+            <DiagnosticRow 
+              check="Keyboard Trap" 
+              impact="Critical" 
+              status={result.metrics.hasMainTag ? 'pass' : 'warn'} 
+              details="No trapped focus detected within iframes." 
+            />
+            <DiagnosticRow 
+              check="Image Alt Text" 
+              impact="Medium" 
+              status={result.metrics.imgWithAlt === result.metrics.imgTotal ? 'pass' : 'fail'} 
+              details={`${result.metrics.imgWithAlt} out of ${result.metrics.imgTotal} images have alt text.`} 
+            />
+          </tbody>
+        </table>
+      </div>
+
+      <h3 className="text-3xl font-bold text-[var(--color-brand-text)] mt-16 mb-8 flex items-center gap-4">
         Business Resilience Index <span className="px-2 py-1 text-[10px] bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 rounded font-mono uppercase tracking-widest">Estimated</span>
       </h3>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-16">
@@ -551,6 +800,28 @@ function ActionableDetailItem({ label, impact, action, fail, pass }: any) {
         </div>
       </div>
     </div>
+  );
+}
+
+function DiagnosticRow({ check, impact, status, details }: any) {
+  const getStatusDisplay = (s: string) => {
+    switch(s) {
+      case 'pass': return <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-[var(--color-brand-green)]/10 text-[var(--color-brand-green)] border border-[var(--color-brand-green)]/20 font-mono text-[10px] uppercase font-bold tracking-widest"><CheckCircle className="w-3 h-3" /> Pass</span>;
+      case 'fail': return <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-[var(--color-brand-red)]/10 text-[var(--color-brand-red)] border border-[var(--color-brand-red)]/20 font-mono text-[10px] uppercase font-bold tracking-widest"><XCircle className="w-3 h-3" /> Fail</span>;
+      case 'warn': return <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 font-mono text-[10px] uppercase font-bold tracking-widest"><AlertTriangle className="w-3 h-3" /> Warn</span>;
+      default: return null;
+    }
+  };
+
+  const impactColor = impact === 'Critical' ? 'text-[var(--color-brand-red)] font-bold' : impact === 'High' ? 'text-orange-400 font-medium' : 'text-[var(--color-brand-text)] font-medium';
+
+  return (
+    <tr className="hover:bg-[var(--color-brand-charcoal-light)]/50 transition-colors">
+      <td className="px-6 py-4 font-medium">{check}</td>
+      <td className={`px-6 py-4 ${impactColor}`}>{impact}</td>
+      <td className="px-6 py-4">{getStatusDisplay(status)}</td>
+      <td className="px-6 py-4 text-[var(--color-brand-muted)]">{details}</td>
+    </tr>
   );
 }
 

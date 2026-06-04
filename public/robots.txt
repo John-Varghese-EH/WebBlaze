@@ -1,0 +1,20 @@
+# ══════════════════════════════════════════════════════
+#  robots.txt — WebBlaze
+#  Maintained by: John Varghese (J0X)
+# ══════════════════════════════════════════════════════
+
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /internal/
+Crawl-delay: 10
+
+# ── AI LANGUAGE MODEL CRAWLERS ────────────────────────
+User-agent: GPTBot
+Allow: /
+Allow: /llms.txt
+
+User-agent: ClaudeBot
+Allow: /
+
+Sitemap: https://webblaze.com/sitemap.xml

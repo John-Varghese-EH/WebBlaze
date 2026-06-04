@@ -1,5 +1,6 @@
 import { Flame, Menu, X, Sun, Moon } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -8,10 +9,31 @@ export function Navbar() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const theme = localStorage.getItem('theme');
-      if (theme === 'light') {
+      const prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+
+      if (theme === 'light' || (!theme && prefersLight)) {
         document.documentElement.classList.add('light');
         setIsLight(true);
+      } else {
+        document.documentElement.classList.remove('light');
+        setIsLight(false);
       }
+
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: light)');
+      const handleChange = (e: MediaQueryListEvent) => {
+        if (!localStorage.getItem('theme')) {
+          if (e.matches) {
+            document.documentElement.classList.add('light');
+            setIsLight(true);
+          } else {
+            document.documentElement.classList.remove('light');
+            setIsLight(false);
+          }
+        }
+      };
+      
+      mediaQuery.addEventListener('change', handleChange);
+      return () => mediaQuery.removeEventListener('change', handleChange);
     }
   }, []);
 
@@ -29,12 +51,12 @@ export function Navbar() {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass-nav">
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-[var(--color-brand-charcoal-light)] rounded-xl border border-[var(--color-brand-border-strong)]">
+        <Link to="/" className="flex items-center gap-3 group">
+          <div className="p-2 bg-[var(--color-brand-charcoal-light)] rounded-xl border border-[var(--color-brand-border-strong)] group-hover:border-[var(--color-brand-red)] transition-colors">
             <Flame className="w-6 h-6 text-[var(--color-brand-red)] animate-heartbeat" />
           </div>
-          <span className="text-xl font-bold tracking-tight text-[var(--color-brand-text)]">WebBlaze</span>
-        </div>
+          <span className="text-xl font-bold tracking-tight text-[var(--color-brand-text)] group-hover:text-[var(--color-brand-red)] transition-colors">WebBlaze</span>
+        </Link>
         
         <div className="hidden md:flex items-center gap-8">
           <button 
@@ -44,9 +66,8 @@ export function Navbar() {
           >
             {isLight ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
           </button>
-          <a href="#hero" className="text-sm font-medium text-[var(--color-brand-muted)] hover:text-[var(--color-brand-text)] transition-colors">Audit</a>
-          <a href="#hall-of-fame" className="text-sm font-medium text-[var(--color-brand-muted)] hover:text-[var(--color-brand-text)] transition-colors">Hall of Fame</a>
-          <a href="#pricing" className="text-sm font-medium text-[var(--color-brand-muted)] hover:text-[var(--color-brand-text)] transition-colors">Pricing</a>
+          <Link to="/" className="text-sm font-medium text-[var(--color-brand-muted)] hover:text-[var(--color-brand-text)] transition-colors">Audit</Link>
+          <Link to="/checklist" className="text-sm font-medium text-[var(--color-brand-muted)] hover:text-[var(--color-brand-text)] transition-colors">Checklist</Link>
           <button className="px-5 py-2 bg-[var(--color-brand-text)] text-[var(--color-brand-bg)] font-semibold rounded-lg hover:opacity-80 transition-opacity text-sm">
             Sign In
           </button>
@@ -62,9 +83,8 @@ export function Navbar() {
 
       {isOpen && (
         <div className="md:hidden absolute top-20 left-0 right-0 bg-[var(--color-brand-charcoal)] border-b border-[var(--color-brand-border)] p-6 flex flex-col gap-4 shadow-2xl">
-          <a href="#hero" className="text-lg font-medium text-[var(--color-brand-muted)] hover:text-[var(--color-brand-text)]" onClick={() => setIsOpen(false)}>Audit</a>
-          <a href="#hall-of-fame" className="text-lg font-medium text-[var(--color-brand-muted)] hover:text-[var(--color-brand-text)]" onClick={() => setIsOpen(false)}>Hall of Fame</a>
-          <a href="#pricing" className="text-lg font-medium text-[var(--color-brand-muted)] hover:text-[var(--color-brand-text)]" onClick={() => setIsOpen(false)}>Pricing</a>
+          <Link to="/" className="text-lg font-medium text-[var(--color-brand-muted)] hover:text-[var(--color-brand-text)]" onClick={() => setIsOpen(false)}>Audit</Link>
+          <Link to="/checklist" className="text-lg font-medium text-[var(--color-brand-muted)] hover:text-[var(--color-brand-text)]" onClick={() => setIsOpen(false)}>Checklist</Link>
           <button className="mt-4 w-full px-5 py-3 bg-[var(--color-brand-text)] text-[var(--color-brand-bg)] font-bold rounded-lg hover:opacity-80 transition-opacity">
             Sign In
           </button>

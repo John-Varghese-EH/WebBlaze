@@ -1,0 +1,16 @@
+{
+  "name": "WebBlaze Technical Audit",
+  "short_name": "WebBlaze",
+  "description": "Technical SEO and architecture auditing tool designed for modern websites.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#050505",
+  "theme_color": "#050505",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en",
+  "dir": "ltr",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

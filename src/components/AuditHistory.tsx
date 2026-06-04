@@ -6,6 +6,7 @@ export function AuditHistory() {
   const { history, clearHistory } = useAuditHistory();
   const [isOpen, setIsOpen] = useState(false);
   const [filterQuery, setFilterQuery] = useState('');
+  const [filterCategory, setFilterCategory] = useState<string>('All');
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const groupedHistory = useMemo(() => {
@@ -29,8 +30,21 @@ export function AuditHistory() {
       entries = entries.filter(e => e.url.toLowerCase().includes(q));
     }
 
+    if (filterCategory !== 'All') {
+      entries = entries.filter(e => {
+        const { score, metrics } = e.latest;
+        switch (filterCategory) {
+          case 'High Score': return score >= 80;
+          case 'Needs Work': return score < 80;
+          case 'Security Issues': return metrics && metrics.securityScore && metrics.securityScore < 20;
+          case 'Slow': return metrics && metrics.loadTime && metrics.loadTime > 1500;
+          default: return true;
+        }
+      });
+    }
+
     return entries;
-  }, [history, filterQuery]);
+  }, [history, filterQuery, filterCategory]);
 
   useEffect(() => {
     if (isOpen && scrollRef.current) {
@@ -40,7 +54,10 @@ export function AuditHistory() {
       }, 100);
     } else {
       if (!isOpen) { // Reset filter when closing
-        setTimeout(() => setFilterQuery(''), 300);
+        setTimeout(() => {
+          setFilterQuery('');
+          setFilterCategory('All');
+        }, 300);
       }
     }
   }, [isOpen]);
@@ -91,7 +108,7 @@ export function AuditHistory() {
           </button>
         </div>
 
-        <div className="p-4 border-b border-[var(--color-brand-border)]">
+        <div className="p-4 border-b border-[var(--color-brand-border)] flex flex-col gap-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-brand-muted)]" />
             <input 
@@ -101,6 +118,17 @@ export function AuditHistory() {
               onChange={(e) => setFilterQuery(e.target.value)}
               className="w-full bg-[var(--color-brand-charcoal)] border border-[var(--color-brand-border-strong)] text-[var(--color-brand-text)] rounded-lg pl-9 pr-4 py-2 focus:outline-none focus:border-[var(--color-brand-red)] font-mono text-sm"
             />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {['All', 'High Score', 'Needs Work', 'Security Issues', 'Slow'].map(cat => (
+              <button
+                key={cat}
+                onClick={() => setFilterCategory(cat)}
+                className={`px-3 py-1 text-xs font-mono rounded-full border transition-colors ${filterCategory === cat ? 'bg-[var(--color-brand-red)] text-white border-[var(--color-brand-red)]' : 'bg-transparent text-[var(--color-brand-muted)] border-[var(--color-brand-border-strong)] hover:border-[var(--color-brand-text)]'}`}
+              >
+                {cat}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -122,18 +150,39 @@ export function AuditHistory() {
                 <div className={`absolute top-0 left-0 w-1 h-full ${latest.score > 80 ? 'bg-[var(--color-brand-green)]' : latest.score > 50 ? 'bg-yellow-500' : 'bg-[var(--color-brand-red)]'}`} />
                 
                 <div className="flex justify-between items-start mb-3 ml-2">
-                  <a 
-                    href={url} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-sm font-medium text-[var(--color-brand-text)] hover:text-[var(--color-brand-red)] transition-colors truncate max-w-[200px] flex items-center gap-1"
-                  >
-                    {url.replace('https://', '')}
-                    <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </a>
-                  <span className={`font-mono font-bold ${latest.score > 80 ? 'text-[var(--color-brand-green)]' : latest.score > 50 ? 'text-yellow-500' : 'text-[var(--color-brand-red)]'}`}>
-                    {latest.score}
-                  </span>
+                  <div className="flex flex-col">
+                    <a 
+                      href={url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-sm font-medium text-[var(--color-brand-text)] hover:text-[var(--color-brand-red)] transition-colors truncate max-w-[180px] flex items-center gap-1"
+                    >
+                      {url.replace('https://', '')}
+                      <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </a>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        const shareUrl = `${window.location.origin}/${url.replace(/^https?:\/\//, '')}`;
+                        navigator.clipboard.writeText(shareUrl);
+                        // Using visual feedback
+                        const btn = e.currentTarget;
+                        const originalHtml = btn.innerHTML;
+                        btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[var(--color-brand-green)]"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+                        setTimeout(() => btn.innerHTML = originalHtml, 2000);
+                      }}
+                      className="text-[var(--color-brand-muted)] hover:text-[var(--color-brand-text)] transition-colors p-1 opacity-0 group-hover:opacity-100"
+                      title="Copy sharing link"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                    </button>
+                    <span className={`font-mono font-bold ${latest.score > 80 ? 'text-[var(--color-brand-green)]' : latest.score > 50 ? 'text-yellow-500' : 'text-[var(--color-brand-red)]'}`}>
+                      {latest.score}
+                    </span>
+                  </div>
                 </div>
                 
                 <div className="ml-2 flex justify-between items-end gap-2 text-xs font-mono text-[var(--color-brand-muted)]">

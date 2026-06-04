@@ -3,25 +3,28 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
-import { Hero } from './components/Hero';
-import { HallOfFame } from './components/HallOfFame';
 import { Footer } from './components/Footer';
-import { AuditHistory } from './components/AuditHistory';
 import { LegalModals } from './components/LegalModals';
+import { Home } from './pages/Home';
+import { Checklist } from './pages/Checklist';
+import { NotFound } from './pages/NotFound';
 
 export default function App() {
   return (
-    <div className="min-h-screen selection:bg-[var(--color-brand-red)] selection:text-white">
-      <Navbar />
-      <main>
-        <Hero />
-        <HallOfFame />
-      </main>
-      <AuditHistory />
-      <Footer />
-      <LegalModals />
-    </div>
+    <BrowserRouter>
+      <div className="min-h-screen selection:bg-[var(--color-brand-red)] selection:text-white">
+        <Navbar />
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/checklist" element={<Checklist />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+        <Footer />
+        <LegalModals />
+      </div>
+    </BrowserRouter>
   );
 }
 

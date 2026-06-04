@@ -46,6 +46,7 @@ export async function processAudit(url: string) {
   let inputCount = 0;
   let ariaLabelCount = 0;
   let buttonCount = 0;
+  let calculatedGeo: any = null;
 
   try {
     const urlObj = new URL(url);
@@ -111,6 +112,15 @@ export async function processAudit(url: string) {
     buttonCount = (text.match(/<button[^>]*>/gi) || []).length;
     ariaLabelCount = (text.match(/aria-label=["'][^"']+["']/gi) || []).length;
 
+    const hasJsonLd = /<script[^>]*type=["']application\/ld\+json["'][^>]*>/i.test(text);
+    let legalLinkCount = 0;
+    aTags.forEach(tag => {
+      const lower = tag.toLowerCase();
+      if (lower.includes('privacy') || lower.includes('terms') || lower.includes('about') || lower.includes('contact') || lower.includes('legal')) {
+        legalLinkCount++;
+      }
+    });
+
     accessibilityScore = 50; 
     if (hasMainTag) accessibilityScore += 10;
     if (hasHeaderTag) accessibilityScore += 5;
@@ -131,6 +141,19 @@ export async function processAudit(url: string) {
     if (ttfb > 800) baseScore -= 15;
     if (loadTime > 2000) baseScore -= 10;
     if (pageSize > 1500000) baseScore -= 10;
+
+    const aiU = 30 + (hasLlmsTxt ? 30 : 0) + (hasJsonLd ? 40 : 0);
+    const trA = 40 + (legalLinkCount > 0 ? 30 : 0) + (url.startsWith('https://') ? 30 : 0);
+    const ba = 20 + (buttonCount > 0 ? 30 : 0) + (formCount > 0 ? 20 : 0) + (internalLinks > 5 ? 30 : 0);
+    const bi = 30 + (hasOpenGraph ? 40 : 0) + (canonicalDetected ? 30 : 0);
+    
+    // Store calculated metrics to replace the random ones
+    calculatedGeo = {
+        aiUnderstanding: Math.min(100, aiU),
+        trustAuthority: Math.min(100, trA),
+        businessActivation: Math.min(100, ba),
+        brandImprint: Math.min(100, bi)
+    };
 
   } catch (fetchError) {
     console.warn(`Could not strictly fetch ${url}, using deterministic simulated metrics.`);
@@ -207,10 +230,10 @@ export async function processAudit(url: string) {
       ssl: url.startsWith('https://'),
       wordCount: Math.max(100, textContent.split(/\s+/).length % 5000),
       entities: ["Technology", "Business", "Digital", url.replace('https://', '').split('.')[0], "Information"].slice(0, 3 + (url.length % 3)),
-      aiUnderstanding: finalScore > 50 ? Math.floor(Math.random() * 40) + 40 : 20,
-      trustAuthority: finalScore > 60 ? Math.floor(Math.random() * 30) + 60 : 30,
-      businessActivation: Math.floor(Math.random() * 80) + 20,
-      brandImprint: hasOpenGraph ? Math.floor(Math.random() * 40) + 60 : 30,
+      aiUnderstanding: calculatedGeo ? calculatedGeo.aiUnderstanding : (finalScore > 50 ? 60 : 30),
+      trustAuthority: calculatedGeo ? calculatedGeo.trustAuthority : (finalScore > 60 ? 60 : 30),
+      businessActivation: calculatedGeo ? calculatedGeo.businessActivation : 40,
+      brandImprint: calculatedGeo ? calculatedGeo.brandImprint : (hasOpenGraph ? 70 : 30),
     },
     timestamp: Date.now(),
     aiInsights
